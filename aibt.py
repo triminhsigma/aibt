@@ -44,8 +44,24 @@ def _fmt_number_for_expr(x:Fraction):
     return str(x.numerator) if x.denominator==1 else f"{x.numerator}/{x.denominator}"
 
 def tao_cau_hoi(dokho):
-    a,b=random.randint(1,10),random.randint(1,10)
-    return f"{a}+{b}=?", _apply_op(Fraction(a),"+",Fraction(b))
+    if dokho=="Rất Dễ":
+        a,b=random.randint(1,10),random.randint(1,10)
+        op="+"
+    elif dokho=="Dễ":
+        a,b=random.randint(1,20),random.randint(1,20)
+        op=random.choice(["+","-"])
+    elif dokho=="Bình Thường":
+        a,b=random.randint(1,50),random.randint(1,50)
+        op=random.choice(["+","-","*"])
+    elif dokho=="Khó":
+        a,b=random.randint(1,100),rand_nonzero(1,100)
+        op=random.choice(["+","-","*","/"])
+    else:
+        a,b=random.randint(1,200),rand_nonzero(1,200)
+        op=random.choice(["+","-","*","/"])
+    expr=f"{a}{op}{b}=?"
+    result=_apply_op(Fraction(a),op,Fraction(b))
+    return expr,result
 
 def parse_answer(ans):
     try:
@@ -96,9 +112,9 @@ def get_player_progress(player_name):
     except: return "Không thể đọc tiến trình người chơi."
 
 if not st.session_state.started:
-    player_name = st.text_input("Nhập tên người chơi:")
-    dokho = st.selectbox("Chọn độ khó", ["Rất Dễ","Dễ","Bình Thường","Khó","Rất Khó"])
-    so_cau = st.number_input("Số câu", min_value=1, max_value=50, value=10)
+    player_name = st.text_input("Nhập tên người chơi:", st.session_state.player_name)
+    dokho = st.selectbox("Chọn độ khó", ["Rất Dễ","Dễ","Bình Thường","Khó","Rất Khó"], index=["Rất Dễ","Dễ","Bình Thường","Khó","Rất Khó"].index(st.session_state.dokho))
+    so_cau = st.number_input("Số câu", min_value=1, max_value=50, value=st.session_state.so_cau)
     if st.button("Bắt đầu"):
         if not player_name.strip():
             st.warning("Vui lòng nhập tên!")
@@ -149,5 +165,7 @@ if st.session_state.started and st.session_state.index>=st.session_state.so_cau:
     st.markdown(get_highscore_text(st.session_state.dokho))
     st.markdown(get_player_progress(st.session_state.player_name))
     if st.button("🔄 Chơi lại"):
+        idx_name=st.session_state.player_name
         st.session_state.clear()
+        st.session_state.player_name=idx_name
         st.experimental_rerun()
