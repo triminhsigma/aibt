@@ -40,9 +40,6 @@ def _apply_op(x:Fraction, op:str, y:Fraction):
     if op=="/": return x/y if y!=0 else Fraction(0)
     return x
 
-def _fmt_number_for_expr(x:Fraction):
-    return str(x.numerator) if x.denominator==1 else f"{x.numerator}/{x.denominator}"
-
 def tao_cau_hoi(dokho):
     if dokho=="Rất Dễ":
         a,b=random.randint(1,10),random.randint(1,10)
@@ -116,9 +113,7 @@ if not st.session_state.started:
     dokho = st.selectbox("Chọn độ khó", ["Rất Dễ","Dễ","Bình Thường","Khó","Rất Khó"], index=["Rất Dễ","Dễ","Bình Thường","Khó","Rất Khó"].index(st.session_state.dokho))
     so_cau = st.number_input("Số câu", min_value=1, max_value=50, value=st.session_state.so_cau)
     if st.button("Bắt đầu"):
-        if not player_name.strip():
-            st.warning("Vui lòng nhập tên!")
-        else:
+        if player_name.strip():
             st.session_state.started=True
             st.session_state.player_name=player_name
             st.session_state.dokho=dokho
@@ -127,45 +122,53 @@ if not st.session_state.started:
             st.session_state.so_dung=0
             st.session_state.start_time=time.time()
             st.session_state.cauhoi,st.session_state.dap_an=tao_cau_hoi(dokho)
-            st.experimental_rerun()
+        else:
+            st.warning("Vui lòng nhập tên!")
 
-if st.session_state.started and st.session_state.index<st.session_state.so_cau:
+if st.session_state.started and st.session_state.index < st.session_state.so_cau:
     st.subheader(f"Câu {st.session_state.index+1}/{st.session_state.so_cau}")
     st.write(st.session_state.cauhoi)
-    ans=st.text_input("Nhập đáp án", key="ans_input")
-    c1,c2=st.columns(2)
-    with c1:
-        if st.button("✅ Trả lời"):
-            parsed=parse_answer(ans)
-            if parsed is not None:
-                if parsed==st.session_state.dap_an:
-                    st.success("🎉 Đúng!")
-                    st.session_state.so_dung+=1
-                else: st.error(f"❌ Sai. Đáp án đúng: {st.session_state.dap_an}")
-                st.session_state.index+=1
-                if st.session_state.index<st.session_state.so_cau:
-                    st.session_state.cauhoi,st.session_state.dap_an=tao_cau_hoi(st.session_state.dokho)
-                st.experimental_rerun()
-    with c2:
-        if st.button("⏭️ Bỏ qua"):
-            st.info(f"Đáp án là: {st.session_state.dap_an}")
-            st.session_state.index+=1
-            if st.session_state.index<st.session_state.so_cau:
-                st.session_state.cauhoi,st.session_state.dap_an=tao_cau_hoi(st.session_state.dokho)
-            st.experimental_rerun()
+    ans = st.text_input("Nhập đáp án", key=f"ans_input_{st.session_state.index}", value="")
+    c1, c2 = st.columns(2)
 
-if st.session_state.started and st.session_state.index>=st.session_state.so_cau:
-    total_elapsed=time.time()-st.session_state.start_time
-    avg_time=total_elapsed/st.session_state.so_cau
-    diem10=round((st.session_state.so_dung/st.session_state.so_cau)*10,2)
+    with c1:
+        if st.button("✅ Trả lời", key=f"btn_{st.session_state.index}_ok"):
+            parsed = parse_answer(ans)
+            if parsed is not None:
+                if parsed == st.session_state.dap_an:
+                    st.success("🎉 Đúng!")
+                    st.session_state.so_dung += 1
+                else:
+                    st.error(f"❌ Sai. Đáp án đúng: {st.session_state.dap_an}")
+                st.session_state.index += 1
+                if st.session_state.index < st.session_state.so_cau:
+                    st.session_state.cauhoi, st.session_state.dap_an = tao_cau_hoi(st.session_state.dokho)
+
+    with c2:
+        if st.button("⏭️ Bỏ qua", key=f"btn_{st.session_state.index}_skip"):
+            st.info(f"Đáp án là: {st.session_state.dap_an}")
+            st.session_state.index += 1
+            if st.session_state.index < st.session_state.so_cau:
+                st.session_state.cauhoi, st.session_state.dap_an = tao_cau_hoi(st.session_state.dokho)
+
+if st.session_state.started and st.session_state.index >= st.session_state.so_cau:
+    total_elapsed = time.time() - st.session_state.start_time
+    avg_time = total_elapsed / st.session_state.so_cau
+    diem10 = round((st.session_state.so_dung / st.session_state.so_cau) * 10, 2)
     st.success(f"Hết Quiz! Điểm:{diem10}/10 | Đúng:{st.session_state.so_dung}/{st.session_state.so_cau}")
     st.write(f"Tổng TG:{total_elapsed:.2f}s | TG TB:{avg_time:.2f}s")
-    save_highscore(diem10,st.session_state.so_cau,total_elapsed,avg_time,st.session_state.dokho,st.session_state.player_name)
+    save_highscore(diem10, st.session_state.so_cau, total_elapsed, avg_time, st.session_state.dokho, st.session_state.player_name)
     st.markdown("---")
     st.markdown(get_highscore_text(st.session_state.dokho))
     st.markdown(get_player_progress(st.session_state.player_name))
     if st.button("🔄 Chơi lại"):
-        idx_name=st.session_state.player_name
-        st.session_state.clear()
-        st.session_state.player_name=idx_name
-        st.experimental_rerun()
+        st.session_state.update({
+            "started": False,
+            "index": 0,
+            "so_dung": 0,
+            "start_time": None,
+            "cauhoi": None,
+            "dap_an": None,
+            "player_name": "",
+            "dokho": "Rất Dễ"
+        })
