@@ -7,6 +7,8 @@ import base64
 from fractions import Fraction
 
 def local_font(font_path: str, font_name: str):
+    if not os.path.exists(font_path):
+        return
     with open(font_path, "rb") as f:
         data = f.read()
     b64 = base64.b64encode(data).decode()
@@ -22,39 +24,23 @@ def local_font(font_path: str, font_name: str):
         </style>
     """, unsafe_allow_html=True)
 
-local_font("fonts/SJ-Pancake-Pen.ttf", "SJ Pancake Pen")
+local_font("SJ Pancake Pen.ttf", "SJ Pancake Pen")
 
-def random_value():
-    r = random.choice([0, 1, 2])
-    if r == 0:
-        return random.randint(1, 9)
-    if r == 1:
-        return round(random.uniform(1, 9), 2)
-    return Fraction(random.randint(1, 9), random.randint(1, 9))
-
-def format_value(v):
-    if isinstance(v, Fraction):
-        return f"{v.numerator}/{v.denominator}"
-    if isinstance(v, float):
-        s = f"{v:.2f}"
-        if s.endswith(".00"):
-            return s[:-3]
-        return s
-    return str(v)
-
-def to_fraction(v):
-    if isinstance(v, Fraction):
-        return v
-    if isinstance(v, float):
-        return Fraction(str(v))
-    return Fraction(v)
-
-def to_eval_literal(v):
-    if isinstance(v, Fraction):
-        return f"Fraction({v.numerator},{v.denominator})"
-    if isinstance(v, float):
-        return repr(v)
-    return str(v)
+def random_number():
+    kind = random.choice(["int", "float", "frac"])
+    if kind == "int":
+        value = random.randint(1, 9)
+        return value
+    elif kind == "float":
+        value = round(random.uniform(1, 9), 1)
+        return value
+    else:
+        numerator = random.randint(1, 9)
+        denominator = random.randint(1, 9)
+        if denominator == 0:
+            denominator = 1
+        value = Fraction(numerator, denominator)
+        return value
 
 def generate_question(mode, level):
     if mode == "Số hữu tỉ":
@@ -63,152 +49,137 @@ def generate_question(mode, level):
             b = random.randint(1, 20)
             op = random.choice(["+", "-"])
             expr = f"{a} {op} {b}"
-            ans_frac = to_fraction(eval(f"{a}{op}{b}"))
-            return expr, ans_frac
-
-        if level == "Dễ":
+            ans = eval(expr)
+            return expr, ans
+        elif level == "Dễ":
             a = random.randint(1, 20)
             b = random.randint(1, 20)
             op = random.choice(["+", "-", "*", "/"])
             if op == "/" and b == 0:
                 b = 1
             expr = f"{a} {op} {b}"
-            ans_frac = to_fraction(eval(f"{a}{op}{b}"))
-            return expr, ans_frac
-
-        if level == "Bình Thường":
+            ans = eval(expr)
+            return expr, ans
+        elif level == "Bình Thường":
             a = random.randint(1, 20)
             b = random.randint(1, 20)
             c = random.randint(1, 20)
-            ops = random.choices(["+", "-", "*"], k=2)
-            expr = f"{a} {ops[0]} {b} {ops[1]} {c}"
-            ans_frac = to_fraction(eval(expr))
-            return expr, ans_frac
-
-        if level == "Khó":
-            a = random_value()
-            b = random_value()
+            op1 = random.choice(["+", "-", "*"])
+            op2 = random.choice(["+", "-", "*"])
+            expr = f"{a} {op1} {b} {op2} {c}"
+            ans = eval(expr)
+            return expr, ans
+        elif level == "Khó":
+            a = random_number()
+            b = random_number()
             op = random.choice(["+", "-", "*", "/"])
-            if op == "/" and to_fraction(b) == 0:
+            if op == "/" and float(b) == 0:
                 b = 1
-            disp = f"({format_value(a)}) {op} ({format_value(b)})"
-            eval_expr = f"({to_eval_literal(a)}){op}({to_eval_literal(b)})"
-            ans_frac = to_fraction(eval(eval_expr, {"Fraction": Fraction}))
-            return disp, ans_frac
-
-        if level == "Rất Khó":
-            a = random_value()
-            b = random_value()
-            c = random_value()
-            ops = random.choices(["+", "-", "*", "/"], k=2)
-            if ops[0] == "/" and to_fraction(b) == 0:
-                b = 1
-            if ops[1] == "/" and to_fraction(c) == 0:
-                c = 1
-            disp = f"({format_value(a)}) {ops[0]} ({format_value(b)}) {ops[1]} ({format_value(c)})"
-            eval_expr = f"({to_eval_literal(a)}){ops[0]}({to_eval_literal(b)}){ops[1]}({to_eval_literal(c)})"
-            ans_frac = to_fraction(eval(eval_expr, {"Fraction": Fraction}))
-            return disp, ans_frac
-
-    if mode == "Tìm x":
-        if level == "Rất Dễ":
-            a = random.randint(1, 20)
-            b = random.randint(1, 20)
-            left = f"x + {format_value(a)}"
-            right = format_value(b)
-            ans_frac = to_fraction(b) - to_fraction(a)
-            return (left, right), ans_frac
-
-        if level == "Dễ":
-            a = random.randint(1, 20)
-            b = random.randint(1, 20)
-            left = f"{format_value(a)} + x"
-            right = format_value(b)
-            ans_frac = to_fraction(b) - to_fraction(a)
-            return (left, right), ans_frac
-
-        if level == "Bình Thường":
-            a = random.randint(1, 10)
-            b = random.randint(1, 10)
-            c = random.randint(1, 20)
-            left = f"{format_value(a)} * x + {format_value(b)}"
-            right = format_value(c)
-            ans_frac = (to_fraction(c) - to_fraction(b)) / to_fraction(a)
-            return (left, right), ans_frac
-
-        if level == "Khó":
-            a = random_value()
-            b = random_value()
-            op = random.choice(["+", "-", "*", "/"])
+            expr = f"({a}) {op} ({b})"
             if op == "+":
-                left = f"x + ({format_value(a)})"
-                right = format_value(b)
-                ans_frac = to_fraction(b) - to_fraction(a)
-                return (left, right), ans_frac
-            if op == "-":
-                left = f"x - ({format_value(a)})"
-                right = format_value(b)
-                ans_frac = to_fraction(b) + to_fraction(a)
-                return (left, right), ans_frac
-            if op == "*":
-                if to_fraction(a) == 0:
-                    a = 1
-                left = f"x * ({format_value(a)})"
-                right = format_value(b)
-                ans_frac = to_fraction(b) / to_fraction(a)
-                return (left, right), ans_frac
-            if op == "/":
-                if to_fraction(a) == 0:
-                    a = 1
-                left = f"x / ({format_value(a)})"
-                right = format_value(b)
-                ans_frac = to_fraction(b) * to_fraction(a)
-                return (left, right), ans_frac
-
-        if level == "Rất Khó":
-            pattern = random.choice([0, 1, 2, 3, 4])
-            a = random_value()
-            b = random_value()
-            c = random_value()
-            if pattern == 0:
-                left = f"({format_value(a)}) * x + ({format_value(b)})"
-                right = format_value(c)
-                if to_fraction(a) == 0:
-                    a = 1
-                ans_frac = (to_fraction(c) - to_fraction(b)) / to_fraction(a)
-                return (left, right), ans_frac
-            if pattern == 1:
-                left = f"(x + ({format_value(a)})) * ({format_value(b)})"
-                right = format_value(c)
-                if to_fraction(b) == 0:
-                    b = 1
-                ans_frac = (to_fraction(c) / to_fraction(b)) - to_fraction(a)
-                return (left, right), ans_frac
-            if pattern == 2:
-                left = f"x / ({format_value(a)}) - ({format_value(b)})"
-                right = format_value(c)
-                if to_fraction(a) == 0:
-                    a = 1
-                ans_frac = (to_fraction(c) + to_fraction(b)) * to_fraction(a)
-                return (left, right), ans_frac
-            if pattern == 3:
-                left = f"{format_value(a)} * (x - ({format_value(b)}))"
-                right = format_value(c)
-                if to_fraction(a) == 0:
-                    a = 1
-                ans_frac = (to_fraction(c) / to_fraction(a)) + to_fraction(b)
-                return (left, right), ans_frac
-            left = f"(x + ({format_value(a)})) / ({format_value(b)}) + ({format_value(c)})"
-            right = format_value(random_value())
-            denom = to_fraction(b)
-            if denom == 0:
+                ans = float(a) + float(b)
+            elif op == "-":
+                ans = float(a) - float(b)
+            elif op == "*":
+                ans = float(a) * float(b)
+            elif op == "/":
+                ans = float(a) / float(b)
+            return expr, ans
+        else:
+            a = random_number()
+            b = random_number()
+            c = random_number()
+            op1 = random.choice(["+", "-", "*", "/"])
+            op2 = random.choice(["+", "-", "*", "/"])
+            if op1 == "/" and float(b) == 0:
                 b = 1
-                denom = to_fraction(b)
-            rhs = to_fraction(right)
-            ans_frac = (rhs - to_fraction(c)) * denom - to_fraction(a)
-            return (left, right), ans_frac
+            if op2 == "/" and float(c) == 0:
+                c = 1
+            expr = f"({a}) {op1} ({b}) {op2} ({c})"
+            if op1 == "+":
+                temp = float(a) + float(b)
+            elif op1 == "-":
+                temp = float(a) - float(b)
+            elif op1 == "*":
+                temp = float(a) * float(b)
+            elif op1 == "/":
+                temp = float(a) / float(b)
+            if op2 == "+":
+                ans = temp + float(c)
+            elif op2 == "-":
+                ans = temp - float(c)
+            elif op2 == "*":
+                ans = temp * float(c)
+            elif op2 == "/":
+                ans = temp / float(c)
+            return expr, ans
 
-    return "0 + 0", Fraction(0, 1)
+    elif mode == "Tìm x":
+        if level == "Rất Dễ" or level == "Dễ" or level == "Bình Thường":
+            a = random.randint(1, 20)
+            b = random.randint(1, 20)
+            expr = f"x + {a} = {b}"
+            ans = b - a
+            return expr, ans
+        elif level == "Khó":
+            a = random_number()
+            b = random_number()
+            op = random.choice(["+", "-", "*", "/"])
+            if op == "/" and float(b) == 0:
+                b = 1
+            if op == "+":
+                result = float(a) + float(b)
+                expr = f"x + {b} = {result}"
+                ans = result - float(b)
+            elif op == "-":
+                result = float(a) - float(b)
+                expr = f"x - {b} = {result}"
+                ans = result + float(b)
+            elif op == "*":
+                result = float(a) * float(b)
+                expr = f"x * {b} = {result}"
+                ans = result / float(b)
+            elif op == "/":
+                result = float(a) / float(b)
+                expr = f"x / {b} = {result}"
+                ans = result * float(b)
+            return expr, ans
+        else:
+            a = random_number()
+            b = random_number()
+            c = random_number()
+            op1 = random.choice(["+", "-", "*", "/"])
+            op2 = random.choice(["+", "-", "*", "/"])
+            if op1 == "/" and float(b) == 0:
+                b = 1
+            if op2 == "/" and float(c) == 0:
+                c = 1
+            if op1 == "+":
+                temp1 = float(a) + float(b)
+            elif op1 == "-":
+                temp1 = float(a) - float(b)
+            elif op1 == "*":
+                temp1 = float(a) * float(b)
+            elif op1 == "/":
+                temp1 = float(a) / float(b)
+            if op2 == "+":
+                result = temp1 + float(c)
+            elif op2 == "-":
+                result = temp1 - float(c)
+            elif op2 == "*":
+                result = temp1 * float(c)
+            elif op2 == "/":
+                result = temp1 / float(c)
+            expr = f"x {op1} {b} {op2} {c} = {result}"
+            if op1 == "+":
+                ans = result - eval(str(float(b)) + op2 + str(float(c)))
+            elif op1 == "-":
+                ans = result + eval(str(float(b)) + op2 + str(float(c)))
+            elif op1 == "*":
+                ans = result / eval(str(float(b)) + op2 + str(float(c)))
+            elif op1 == "/":
+                ans = result * eval(str(float(b)) + op2 + str(float(c)))
+            return expr, ans
 
 def load_leaderboard():
     if os.path.exists("leaderboard.json"):
@@ -255,11 +226,7 @@ if st.session_state.screen == "start":
             st.session_state.mode = mode
             st.session_state.difficulty = level
             st.session_state.num_questions = num_q
-            qs = []
-            for _ in range(num_q):
-                q, a = generate_question(mode, level)
-                qs.append((q, a))
-            st.session_state.questions = qs
+            st.session_state.questions = [generate_question(mode, level) for _ in range(num_q)]
             st.session_state.index = 0
             st.session_state.correct = 0
             st.session_state.start_time = time.time()
@@ -272,9 +239,8 @@ elif st.session_state.screen == "quiz":
         q, ans = st.session_state.questions[idx]
         st.subheader(f"Câu {idx+1}/{st.session_state.num_questions}")
         st.markdown(f"👤 Người chơi: **{st.session_state.player}**")
-        if isinstance(q, tuple):
-            left, right = q
-            st.markdown(f"📌 Câu hỏi: **{left} = {right}, x = ?**")
+        if st.session_state.mode == "Tìm x":
+            st.markdown(f"📌 Câu hỏi: **{q}, x = ?**")
         else:
             st.markdown(f"📌 Câu hỏi: **{q} = ?**")
         if f"answered_{idx}" not in st.session_state:
@@ -284,26 +250,18 @@ elif st.session_state.screen == "quiz":
             user_ans = st.text_input("Nhập đáp án", key=f"ans_{idx}")
             if st.button("Trả lời"):
                 try:
-                    ua = Fraction(user_ans)
-                except Exception:
-                    try:
-                        ua = Fraction(str(float(user_ans)))
-                    except Exception:
-                        ua = None
-                if ua is None:
-                    if isinstance(ans, Fraction):
-                        st.session_state[f"feedback_{idx}"] = ("error", f"Đáp án không hợp lệ! Đúng: {ans.numerator}/{ans.denominator} ≈ {float(ans):.6f}")
+                    if "/" in user_ans:
+                        ua = Fraction(user_ans)
+                        ua_val = float(ua)
                     else:
-                        st.session_state[f"feedback_{idx}"] = ("error", f"Đáp án không hợp lệ! Đúng: {float(ans):.6f}")
-                else:
-                    if abs(float(ua) - float(ans)) < 1e-6:
+                        ua_val = float(user_ans)
+                    if abs(float(ans) - ua_val) < 1e-6:
                         st.session_state[f"feedback_{idx}"] = ("success", "Đúng!")
                         st.session_state.correct += 1
                     else:
-                        if isinstance(ans, Fraction):
-                            st.session_state[f"feedback_{idx}"] = ("error", f"Sai! Đáp án: {ans.numerator}/{ans.denominator} ≈ {float(ans):.6f}")
-                        else:
-                            st.session_state[f"feedback_{idx}"] = ("error", f"Sai! Đáp án: {float(ans):.6f}")
+                        st.session_state[f"feedback_{idx}"] = ("error", f"Sai! Đáp án: {ans}")
+                except:
+                    st.session_state[f"feedback_{idx}"] = ("error", f"Đáp án không hợp lệ! Đúng: {ans}")
                 st.session_state[f"answered_{idx}"] = True
                 st.rerun()
         else:
