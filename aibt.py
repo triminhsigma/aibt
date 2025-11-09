@@ -8,7 +8,7 @@ import re
 import math
 from fractions import Fraction
 
-st.set_page_config(page_title="Quiz Toán Pro", page_icon="📘", layout="centered")
+st.set_page_config(page_title="Quiz Toán", page_icon="📘", layout="centered")
 
 @st.cache_data
 def load_audio_b64(filepath: str):
@@ -250,11 +250,6 @@ if st.session_state.screen == "start":
             level = st.selectbox("Độ khó", ["Rất Dễ","Dễ","Bình Thường","Khó","Rất Khó"])
             num_q = st.number_input("Số câu", min_value=1, max_value=30, value=5)
         with cols[1]:
-            st.write("Cài đặt")
-            music_toggle = st.checkbox("Nhạc nền", value=True)
-            st.session_state.music_on = music_toggle
-            if music_data and music_mime and st.session_state.music_on:
-                st.audio(music_data, format=music_mime, loop=True)
             seed_input = st.text_input("Seed (để lặp lại phiên)", value="")
             if seed_input and st.button("Áp dụng seed"):
                 try:
@@ -282,8 +277,10 @@ elif st.session_state.screen == "quiz":
     if st.session_state.play_sfx:
         if st.session_state.play_sfx == "correct":
             play_audio_sfx("correct.mp3")
+            st.success("✅ Chính xác!")
         elif st.session_state.play_sfx == "wrong":
             play_audio_sfx("wrong.mp3")
+            st.error(f"❌ Sai!")
         st.session_state.play_sfx = None
 
     with placeholder.container():
@@ -317,11 +314,9 @@ elif st.session_state.screen == "quiz":
                             else:
                                 ua = float(user_ans_str.replace(",", "."))
                             if abs(float(ans) - ua) < 1e-6:
-                                st.success("✅ Chính xác!")
                                 st.session_state.correct += 1
                                 st.session_state.play_sfx = "correct"
                             else:
-                                st.error(f"❌ Sai! Đáp án đúng là {ans}")
                                 st.session_state.play_sfx = "wrong"
                         except Exception:
                             st.error("⚠️ Đáp án không hợp lệ.")
