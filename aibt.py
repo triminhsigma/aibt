@@ -381,14 +381,3 @@ elif st.session_state.screen == "result":
                 st.session_state.answered = False
                 st.session_state.play_sfx = None
                 st.rerun()
-        with cols[1]:
-            if st.button("🏠 Trang chủ"):
-                st.session_state.screen = "start"
-                st.session_state.questions = []
-                st.session_state.index = 0
-                st.session_state.correct = 0
-                st.session_state.answered = False
-                st.session_state.play_sfx = None
-                st.rerun()
-
-
