@@ -390,11 +390,5 @@ elif st.session_state.screen == "result":
                 st.session_state.answered = False
                 st.session_state.play_sfx = None
                 st.rerun()
-        with cols[2]:
-            if st.button("📁 Xuất JSON"):
-                fname = f"result_{st.session_state.player}_{int(time.time())}.json"
-                with open(fname, "w", encoding="utf-8") as f:
-                    json.dump({"player": st.session_state.player, "score": st.session_state.correct, "total": st.session_state.num_questions, "time": total_time}, f, ensure_ascii=False, indent=2)
-                with open(fname, "rb") as f:
-                    st.download_button("Tải kết quả (.json)", f, file_name=fname)
+
 
