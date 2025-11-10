@@ -107,12 +107,12 @@ def generate_question(mode, level):
     if mode == "Số hữu tỉ":
         if level == "Rất Dễ":
             a, b = random.randint(-20,20), random.randint(-20,20)
-            op = random.choice(["+","-"])
+            op = random.choice(["+","-","*","/"])
             expr = f"({a}) {op} ({b})"
             ans = eval(expr)
         elif level == "Dễ":
             a,b = random_number(), random_number()
-            op = random.choice(["+","-","*"])
+            op = random.choice(["+","-","*","/"])
             expr = f"{num_str(a)} {op} {num_str(b)}"
             ans = eval(f"{float(a)} {op} {float(b)}")
         elif level == "Bình Thường":
@@ -126,7 +126,7 @@ def generate_question(mode, level):
             ans = eval(f"{float(a)} {op} {fb}")
         elif level == "Khó":
             a,b,c = random_number(), random_number(), random_number()
-            ops = random.choices(["+","-","*"], k=2)
+            ops = random.choices(["+","-","*","/"], k=2)
             expr = f"{num_str(a)} {ops[0]} ({num_str(b)} {ops[1]} {num_str(c)})"
             ans = eval(f"{float(a)} {ops[0]} ({float(b)} {ops[1]} {float(c)})")
         else:
@@ -149,7 +149,7 @@ def generate_question(mode, level):
         if level == "Rất Dễ":
             a,b = random_number(), random_number()
             fa,fb = float(a), float(b)
-            op = random.choice(['+','-'])
+            op = random.choice(['+','-','*','/'])
             if op=='+':
                 expr = f"x + {num_str(a)} = {num_str(b)}"
                 ans = fb - fa
@@ -157,9 +157,9 @@ def generate_question(mode, level):
                 expr = f"x - {num_str(a)} = {num_str(b)}"
                 ans = fb + fa
         elif level == "Dễ":
-            a,b,c = [random.randint(-10,10) for _ in range(3)]
+            a,b,c = [random.randint(-10,10) for i in range(3)]
             a = a if a!=0 else 1
-            op = random.choice(['+','-'])
+            op = random.choice(['+','-','*','/'])
             if op=='+':
                 expr = f"{a}x + {b} = {c}"
                 ans = (c - b) / a
@@ -170,7 +170,7 @@ def generate_question(mode, level):
             a,b,c = [random_number() for _ in range(3)]
             a = a if float(a)!=0 else 1
             fa,fb,fc = float(a), float(b), float(c)
-            op = random.choice(['+','-'])
+            op = random.choice(['+','-','*','/'])
             if op=='+':
                 expr = f"{num_str(a)}x + {num_str(b)} = {num_str(c)}"
                 ans = (fc - fb) / fa
@@ -381,3 +381,4 @@ elif st.session_state.screen == "result":
                 st.session_state.answered = False
                 st.session_state.play_sfx = None
                 st.rerun()
+
