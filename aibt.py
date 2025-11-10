@@ -250,7 +250,7 @@ if st.session_state.screen == "start":
             level = st.selectbox("Độ khó", ["Rất Dễ","Dễ","Bình Thường","Khó","Rất Khó"])
             num_q = st.number_input("Số câu", min_value=1, max_value=30, value=5)
         with cols[1]:
-            seed_input = st.text_input("Seed (để lặp lại phiên)", value="")
+            seed_input = st.text_input("Seed (để lặp lại câu hỏi)", value="")
             if seed_input and st.button("Áp dụng seed"):
                 try:
                     st.session_state.seed = int(seed_input)
@@ -397,3 +397,4 @@ elif st.session_state.screen == "result":
                     json.dump({"player": st.session_state.player, "score": st.session_state.correct, "total": st.session_state.num_questions, "time": total_time}, f, ensure_ascii=False, indent=2)
                 with open(fname, "rb") as f:
                     st.download_button("Tải kết quả (.json)", f, file_name=fname)
+
